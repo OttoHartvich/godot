@@ -31,6 +31,10 @@ void FluidSimulator::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_populate_UV_to_UV_average_neighbors", "UV_size"), &FluidSimulator::_populate_UV_to_UV_average_neighbors);
 	ClassDB::bind_method(D_METHOD("_solve_incompressibility", "delta"), &FluidSimulator::_solve_incompressibility);
 	ClassDB::bind_method(D_METHOD("delta_step", "delta"), &FluidSimulator::delta_step);
+	ClassDB::bind_method(D_METHOD("_calculate_weighted_average","x","y"), &FluidSimulator::_calculate_weighted_average);
+}
+void FluidSimulator::_calculate_weighted_average(float x, float y) {
+	
 }
 
 void FluidSimulator::_populate_UV_neighbors() {
@@ -59,21 +63,12 @@ void FluidSimulator::_populate_XY_neighbors() {
 
 void FluidSimulator::_populate_UV_to_UV_average_neighbors(int UV_size) {
 	for (int i = 0; i < UV_to_UV_average_neighbors.size(); ++i) {
-		if (i % (2 * Width + 1) <= (Width + 1)) {
 			int leftUp = (i - (Width + 1)) < 0 ? 0 : (i - (Width + 1));
 			int rightUp = i - Width;
 			int leftDown = (i < Width) ? -1 : i - Width;
 			int rightDown = (i + Width + 1) > UV_size ? 0 : (i + Width + 1);
 
 			UV_to_UV_average_neighbors[i] = { leftUp, rightUp, leftDown, rightDown };
-		} else {
-			int leftUp = (i - (Width + 1)) < 0 ? 0 : (i - (Width + 1));
-			int rightUp = i - Width;
-			int leftDown = (i < Width) ? -1 : i - Width;
-			int rightDown = (i + Width + 1) > UV_size ? 0 : (i + Width + 1);
-
-			UV_to_UV_average_neighbors[i] = { leftUp, rightUp, leftDown, rightDown };
-		}
 	}
 }
 
@@ -93,16 +88,16 @@ void FluidSimulator::_solve_incompressibility(float delta) {
             }
             int collisionSum = collisionLeft + collisionRight + collisionUp + collisionDown;
             float div = -UV[UV_neighbors[xy][0]] + UV[UV_neighbors[xy][1]] + UV[UV_neighbors[xy][2]] - UV[UV_neighbors[xy][3]];
-            float pressure = (-div / collisionSum) * 1.9f; // Ensure 1.9 is treated as float
+            float pressure = (-div / collisionSum) * 1.9f;
 
             if (i == Physics_step) {
                 float pressureQuotient = Density * GridSpacing / delta; 
                 PressureMap[xy] = pressure * pressureQuotient;
             }
-            UV[UV_neighbors[xy][0]] += collisionLeft * pressure;
-            UV[UV_neighbors[xy][1]] -= collisionRight * pressure;
-            UV[UV_neighbors[xy][2]] -= collisionUp * pressure;
-            UV[UV_neighbors[xy][3]] += collisionDown * pressure;
+            UV[UV_neighbors[xy][0]] = UV[UV_neighbors[xy][0]] + collisionLeft * pressure;
+            UV[UV_neighbors[xy][1]] = UV[UV_neighbors[xy][1]] - collisionRight * pressure;
+            UV[UV_neighbors[xy][2]] = UV[UV_neighbors[xy][2]] - collisionUp * pressure;
+            UV[UV_neighbors[xy][3]] = UV[UV_neighbors[xy][3]] + collisionDown * pressure;
         }
     }
 }

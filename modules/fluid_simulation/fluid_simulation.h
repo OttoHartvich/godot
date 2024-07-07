@@ -30,6 +30,7 @@ protected:
     void _populate_UV_to_UV_average_neighbors(int UV_size);
     void _solve_incompressibility(float delta);
     void _make_box_around_collisionMap();
+    void _calculate_weighted_average(float x, float y);
 
 public:
     FluidSimulator(int width, int height, int step, float density, float gridSpacing);
