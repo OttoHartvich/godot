@@ -33,7 +33,8 @@ protected:
     void _calculate_weighted_average(float x, float y);
 
 public:
-    FluidSimulator(int width, int height, int step, float density, float gridSpacing);
+    FluidSimulator();
+    void initialize(int width, int height, int step, float density, float gridSpacing);
     void delta_step(float delta);
 };
 

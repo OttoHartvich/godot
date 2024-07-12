@@ -1,28 +1,32 @@
 #include "fluid_simulation.h"
 #include "core/object/ref_counted.h"
-#include <Slot.h>
 #include <array>
 #include <cmath>
-#include <pairpos-graph.hh>
 #include <vector>
 
-FluidSimulator::FluidSimulator(int width, int height, int step, float density, float gridSpacing) :
-		Width(width),
-		Height(height),
-		Physics_step(step),
-		Density(density),
-		GridSpacing(gridSpacing),
-		XY(width * height, 0.0f),
-		CollisionMap(width * height, 1),
-		PressureMap(width * height, 0.0f),
-		UV((2 * width + 1) * (height / 2) + ((height % 2 == 0) ? 0 : width + 1), 0.0f),
-		NewUV((2 * width + 1) * (height / 2) + ((height % 2 == 0) ? 0 : width + 1), 0.0f),
-		XY_neighbors(width * height),
-		UV_neighbors((2 * width + 1) * (height / 2) + ((height % 2 == 0) ? 0 : width + 1)),
-		UV_to_UV_average_neighbors((2 * width + 1) * (height / 2) + ((height % 2 == 0) ? 0 : width + 1)) {
-	_populate_XY_neighbors();
-	_populate_UV_neighbors();
-	_populate_UV_to_UV_average_neighbors(UV.size());
+FluidSimulator::FluidSimulator() :
+    Width(0), Height(0), Physics_step(0), Density(0.0f), GridSpacing(0.0f) {
+}
+
+void FluidSimulator::initialize(int width, int height, int step, float density, float gridSpacing) {
+    Width = width;
+    Height = height;
+    Physics_step = step;
+    Density = density;
+    GridSpacing = gridSpacing;
+
+    XY.resize(width * height, 0.0f);
+    CollisionMap.resize(width * height, 1);
+    PressureMap.resize(width * height, 0.0f);
+    UV.resize((2 * width + 1) * (height / 2) + ((height % 2 == 0) ? 0 : width + 1), 0.0f);
+    NewUV.resize((2 * width + 1) * (height / 2) + ((height % 2 == 0) ? 0 : width + 1), 0.0f);
+    XY_neighbors.resize(width * height);
+    UV_neighbors.resize((2 * width + 1) * (height / 2) + ((height % 2 == 0) ? 0 : width + 1));
+    UV_to_UV_average_neighbors.resize((2 * width + 1) * (height / 2) + ((height % 2 == 0) ? 0 : width + 1));
+
+    _populate_XY_neighbors();
+    _populate_UV_neighbors();
+    _populate_UV_to_UV_average_neighbors(UV.size());
 }
 
 void FluidSimulator::_bind_methods() {
@@ -31,6 +35,7 @@ void FluidSimulator::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_populate_UV_to_UV_average_neighbors", "UV_size"), &FluidSimulator::_populate_UV_to_UV_average_neighbors);
 	ClassDB::bind_method(D_METHOD("_solve_incompressibility", "delta"), &FluidSimulator::_solve_incompressibility);
 	ClassDB::bind_method(D_METHOD("delta_step", "delta"), &FluidSimulator::delta_step);
+	ClassDB::bind_method(D_METHOD("initialize", "width", "height", "step", "density", "gridSpacing"), &FluidSimulator::initialize);
 	ClassDB::bind_method(D_METHOD("_calculate_weighted_average","x","y"), &FluidSimulator::_calculate_weighted_average);
 }
 void FluidSimulator::_calculate_weighted_average(float x, float y) {
